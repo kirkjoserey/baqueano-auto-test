@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BaqueanoAutoTest — Documentación QA Automatizado</title>
+  <style>
+    /* ══════════════════════════════════════════════════════
+       RESET & BASE
+    ══════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:   #1e293b;
+      --navy2:  #0f172a;
+      --blue:   #3b82f6;
+      --blue2:  #1d4ed8;
+      --green:  #22c55e;
+      --red:    #ef4444;
+      --orange: #f97316;
+      --purple: #8b5cf6;
+      --teal:   #14b8a6;
+      --bg:     #f8fafc;
+      --card:   #ffffff;
+      --border: #e2e8f0;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --light:  #f1f5f9;
+      --code-bg:#0f172a;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       LAYOUT
+    ══════════════════════════════════════════════════════ */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--navy);
+      color: #cbd5e1;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #334155; }
+
+    .sb-brand {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid #334155;
+    }
+    .sb-brand .logo { font-size: 17px; font-weight: 800; color: #fff; }
+    .sb-brand .version { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+    .sb-nav { padding: 12px 0 24px; }
+    .sb-section {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #475569;
+      padding: 14px 20px 6px;
+    }
+    .sb-link {
+      display: block;
+      padding: 7px 20px 7px 26px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 13px;
+      border-left: 2px solid transparent;
+      transition: all .15s;
+    }
+    .sb-link:hover { color: #e2e8f0; background: rgba(255,255,255,.04); }
+    .sb-link.active { color: #fff; border-left-color: var(--blue); background: rgba(59,130,246,.1); }
+    .sb-link .ic { margin-right: 7px; }
+
+    /* Content */
+    .content { flex: 1; min-width: 0; padding: 0 0 80px; }
+
+    /* ══════════════════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════════════════ */
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 60%, #1e293b 100%);
+      color: #fff;
+      padding: 60px 52px 52px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(59,130,246,.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(59,130,246,.2);
+      color: #93c5fd;
+      border: 1px solid rgba(59,130,246,.3);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 12px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 14px;
+    }
+    .hero h1 { font-size: 36px; font-weight: 800; letter-spacing: -.5px; line-height: 1.15; }
+    .hero h1 span { color: #60a5fa; }
+    .hero p { color: #94a3b8; font-size: 16px; margin-top: 12px; max-width: 600px; }
+
+    .hero-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+    .chip {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 12px; font-weight: 600; color: #e2e8f0;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       SECTIONS
+    ══════════════════════════════════════════════════════ */
+    .section { padding: 48px 52px 0; }
+    .section + .section { padding-top: 48px; }
+
+    .sec-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--border);
+    }
+    .sec-icon {
+      width: 40px; height: 40px;
+      background: var(--blue);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .sec-icon.green  { background: #16a34a; }
+    .sec-icon.orange { background: var(--orange); }
+    .sec-icon.purple { background: var(--purple); }
+    .sec-icon.teal   { background: var(--teal); }
+    .sec-icon.red    { background: var(--red); }
+    .sec-icon.navy   { background: var(--navy); }
+    h2.sec-title { font-size: 22px; font-weight: 700; }
+
+    h3 { font-size: 17px; font-weight: 700; margin: 28px 0 10px; }
+    h4 { font-size: 14px; font-weight: 700; margin: 18px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+    p  { margin-bottom: 12px; color: #374151; }
+
+    /* ══════════════════════════════════════════════════════
+       CARDS
+    ══════════════════════════════════════════════════════ */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 16px; margin: 20px 0; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .card-icon { font-size: 28px; margin-bottom: 10px; }
+    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .card-body  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .card.accent { border-left: 4px solid var(--blue); }
+    .card.accent-green  { border-left: 4px solid var(--green); }
+    .card.accent-orange { border-left: 4px solid var(--orange); }
+    .card.accent-purple { border-left: 4px solid var(--purple); }
+
+    /* ══════════════════════════════════════════════════════
+       FLOW DIAGRAM
+    ══════════════════════════════════════════════════════ */
+    .flow {
+      display: flex; align-items: center; flex-wrap: wrap;
+      gap: 0; margin: 20px 0; overflow-x: auto;
+    }
+    .flow-step {
+      background: var(--navy);
+      color: #fff;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .flow-step .fs-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+    .flow-step.blue   { background: var(--blue2); }
+    .flow-step.green  { background: #15803d; }
+    .flow-step.orange { background: #c2410c; }
+    .flow-step.purple { background: #6d28d9; }
+    .flow-step.teal   { background: #0f766e; }
+    .flow-arrow {
+      font-size: 20px; color: var(--muted);
+      padding: 0 8px; flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       TABLES
+    ══════════════════════════════════════════════════════ */
+    .tbl-wrap { overflow-x: auto; margin: 16px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      background: var(--navy);
+      color: #e2e8f0;
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      white-space: nowrap;
+    }
+    tbody tr:nth-child(even) { background: var(--light); }
+    tbody tr:hover { background: #dbeafe; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    td code { font-size: 11px; }
+
+    /* ══════════════════════════════════════════════════════
+       CODE BLOCKS
+    ══════════════════════════════════════════════════════ */
+    .code-wrap {
+      background: var(--code-bg);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 14px 0;
+    }
+    .code-header {
+      background: #1e293b;
+      padding: 8px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .code-lang { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
+    .code-file { font-size: 11px; color: #94a3b8; }
+    pre {
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #e2e8f0;
+    }
+    code {
+      font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+      font-size: 13px;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .kw { color: #c084fc; }
+    .str{ color: #86efac; }
+    .cm { color: #475569; font-style: italic; }
+    .ty { color: #67e8f9; }
+    .num{ color: #fb923c; }
+    .prop{color: #fde68a; }
+
+    /* ══════════════════════════════════════════════════════
+       CALLOUTS
+    ══════════════════════════════════════════════════════ */
+    .callout {
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      display: flex; gap: 12px;
+      font-size: 14px;
+    }
+    .callout-icon { font-size: 20px; flex-shrink: 0; }
+    .callout.info  { background: #eff6ff; border-left: 4px solid var(--blue); }
+    .callout.warn  { background: #fff7ed; border-left: 4px solid var(--orange); }
+    .callout.tip   { background: #f0fdf4; border-left: 4px solid var(--green); }
+    .callout.danger{ background: #fef2f2; border-left: 4px solid var(--red); }
+
+    /* ══════════════════════════════════════════════════════
+       BADGES
+    ══════════════════════════════════════════════════════ */
+    .badge {
+      display: inline-block;
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px;
+      text-transform: uppercase; letter-spacing: .4px;
+      vertical-align: middle;
+    }
+    .bdg-blue   { background: #dbeafe; color: #1d4ed8; }
+    .bdg-green  { background: #dcfce7; color: #15803d; }
+    .bdg-orange { background: #ffedd5; color: #c2410c; }
+    .bdg-purple { background: #f3e8ff; color: #6d28d9; }
+    .bdg-gray   { background: #f1f5f9; color: #475569; }
+    .bdg-teal   { background: #ccfbf1; color: #0f766e; }
+
+    /* ══════════════════════════════════════════════════════
+       VIEWPORT DEMO
+    ══════════════════════════════════════════════════════ */
+    .viewports {
+      display: flex; gap: 24px; align-items: flex-end;
+      margin: 20px 0; flex-wrap: wrap;
+    }
+    .vp {
+      text-align: center; flex-shrink: 0;
+    }
+    .vp-frame {
+      border: 3px solid var(--navy);
+      border-radius: 10px;
+      background: linear-gradient(180deg,#dbeafe,#eff6ff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: var(--navy2);
+      margin: 0 auto 8px;
+      position: relative;
+    }
+    .vp-frame.desktop { width: 140px; height: 88px; }
+    .vp-frame.tablet  { width: 90px;  height: 114px; border-radius: 10px; }
+    .vp-frame.mobile  { width: 56px;  height: 110px; border-radius: 12px; }
+    .vp-frame::after {
+      content: attr(data-label);
+      position: absolute; bottom: 6px;
+      font-size: 9px; color: var(--muted);
+    }
+    .vp-label { font-size: 13px; font-weight: 700; }
+    .vp-size  { font-size: 11px; color: var(--muted); }
+
+    /* ══════════════════════════════════════════════════════
+       STEP LIST
+    ══════════════════════════════════════════════════════ */
+    .steps { list-style: none; margin: 16px 0; }
+    .steps li {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .steps li:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px; flex-shrink: 0;
+      background: var(--blue);
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+    }
+    .step-body { font-size: 14px; padding-top: 3px; }
+    .step-body strong { display: block; margin-bottom: 2px; }
+
+    /* ══════════════════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════════════════ */
+    footer {
+      background: var(--navy);
+      color: #64748b;
+      text-align: center;
+      padding: 28px;
+      font-size: 12px;
+      margin-top: 60px;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       SCROLLSPY
+    ══════════════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .hero { padding: 36px 24px; }
+      .section { padding: 36px 24px 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="logo">⚡ BaqueanoAutoTest</div>
+      <div class="version">Documentación Técnica · v1.0</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Introducción</div>
+      <a class="sb-link" href="#overview"><span class="ic">🏠</span>¿Qué es este proyecto?</a>
+      <a class="sb-link" href="#prerequisites"><span class="ic">📋</span>Prerequisitos</a>
+      <a class="sb-link" href="#structure"><span class="ic">🗂</span>Estructura del proyecto</a>
+
+      <div class="sb-section">Configuración</div>
+      <a class="sb-link" href="#appsettings"><span class="ic">⚙️</span>appsettings.json</a>
+      <a class="sb-link" href="#run"><span class="ic">▶️</span>Cómo ejecutar</a>
+
+      <div class="sb-section">Flujo de Ejecución</div>
+      <a class="sb-link" href="#flow"><span class="ic">🔄</span>Flujo completo</a>
+      <a class="sb-link" href="#phases"><span class="ic">📱</span>Fases responsive</a>
+
+      <div class="sb-section">Módulos de Test</div>
+      <a class="sb-link" href="#login"><span class="ic">🔐</span>Login</a>
+      <a class="sb-link" href="#perfiles"><span class="ic">👤</span>Perfiles</a>
+      <a class="sb-link" href="#usuarios"><span class="ic">👥</span>Usuarios</a>
+      <a class="sb-link" href="#parametros"><span class="ic">🔧</span>Parámetros</a>
+      <a class="sb-link" href="#contactos"><span class="ic">✉️</span>Contactos</a>
+
+      <div class="sb-section">Infraestructura</div>
+      <a class="sb-link" href="#database"><span class="ic">🗄</span>Base de datos</a>
+      <a class="sb-link" href="#screenshots"><span class="ic">📸</span>Capturas</a>
+      <a class="sb-link" href="#report"><span class="ic">📊</span>Reporte HTML</a>
+
+      <div class="sb-section">Referencia</div>
+      <a class="sb-link" href="#errors"><span class="ic">🚨</span>Clasificación de errores</a>
+      <a class="sb-link" href="#extend"><span class="ic">➕</span>Agregar nuevos tests</a>
+      <a class="sb-link" href="#troubleshoot"><span class="ic">🛠</span>Solución de problemas</a>
+    </nav>
+  </aside>
+
+  <!-- ══════════════ CONTENT ══════════════ -->
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="hero" id="overview">
+      <div class="hero-tag">QA Automatizado · .NET 8 · Selenium</div>
+      <h1>⚡ BaqueanoAutoTest<br><span>Documentación Técnica</span></h1>
+      <p>Worker Service en C# que ejecuta pruebas automatizadas de interfaz de usuario (UI testing) sobre el backend Java EE Baqueano, cubriendo tres viewports: PC Desktop, Tablet y Celular.</p>
+      <div class="hero-chips">
+        <div class="chip">🔷 .NET 8 Worker Service</div>
+        <div class="chip">🌐 Selenium WebDriver 4.27</div>
+        <div class="chip">🗄 SQLite</div>
+        <div class="chip">📸 Capturas automáticas</div>
+        <div class="chip">📊 Reporte HTML</div>
+        <div class="chip">📱 Responsive Testing</div>
+      </div>
+    </div>
+
+    <!-- ══════════ ¿QUÉ ES? ══════════ -->
+    <section class="section" id="overview2">
+      <div class="sec-header">
+        <div class="sec-icon">🏠</div>
+        <h2 class="sec-title">¿Qué es este proyecto?</h2>
+      </div>
+
+      <p>
+        <strong>BaqueanoAutoTest</strong> es un programa de testing automatizado que se conecta al sistema
+        web Baqueano y realiza pruebas funcionales sobre sus módulos sin intervención humana.
+        Cada vez que se ejecuta, limpia los resultados anteriores, corre todas las pruebas, captura pantallas
+        y genera un reporte HTML interactivo con los resultados clasificados por dispositivo.
+      </p>
+
+      <div class="cards">
+        <div class="card accent">
+          <div class="card-icon">🤖</div>
+          <div class="card-title">Totalmente autónomo</div>
+          <div class="card-body">Se ejecuta con un solo comando. No requiere intervención manual durante las pruebas.</div>
+        </div>
+        <div class="card accent-green">
+          <div class="card-icon">📱</div>
+          <div class="card-title">3 viewports</div>
+          <div class="card-body">Prueba la misma funcionalidad en Desktop (PC), Tablet (768px) y Celular (390px).</div>
+        </div>
+        <div class="card accent-orange">
+          <div class="card-icon">📊</div>
+          <div class="card-title">Reporte visual</div>
+          <div class="card-body">Genera un único archivo HTML con grilla de capturas, filtros y estadísticas.</div>
+        </div>
+        <div class="card accent-purple">
+          <div class="card-icon">🗄</div>
+          <div class="card-title">Historial en SQLite</div>
+          <div class="card-body">Todos los resultados quedan guardados en una base de datos local.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ PREREQUISITOS ══════════ -->
+    <section class="section" id="prerequisites">
+      <div class="sec-header">
+        <div class="sec-icon green">📋</div>
+        <h2 class="sec-title">Prerequisitos</h2>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Componente</th><th>Versión</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td><strong>.NET SDK</strong></td><td>8.0 o superior</td><td>Runtime y compilador de C#</td></tr>
+            <tr><td><strong>Google Chrome</strong></td><td>114 o superior</td><td>Navegador para las pruebas</td></tr>
+            <tr><td><strong>ChromeDriver</strong></td><td>Misma versión que Chrome</td><td>Se instala automáticamente vía NuGet</td></tr>
+            <tr><td><strong>Backend Baqueano</strong></td><td>Corriendo en localhost</td><td>Servidor Java EE accesible en <code>http://localhost:8080/baqueano</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div>El <strong>ChromeDriver</strong> se descarga y administra automáticamente a través del paquete NuGet
+        <code>Selenium.WebDriver.ChromeDriver</code>. No es necesario instalarlo manualmente.</div>
+      </div>
+    </section>
+
+    <!-- ══════════ ESTRUCTURA ══════════ -->
+    <section class="section" id="structure">
+      <div class="sec-header">
+        <div class="sec-icon orange">🗂</div>
+        <h2 class="sec-title">Estructura del proyecto</h2>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">Árbol de archivos</span>
+        </div>
+        <pre>
+BaqueanoAutoTest/
+│
+├── <span class="prop">Program.cs</span>               <span class="cm">← Registro de DI y configuración del host</span>
+├── <span class="prop">Worker.cs</span>                <span class="cm">← Punto de entrada del servicio (BackgroundService)</span>
+├── <span class="prop">appsettings.json</span>         <span class="cm">← Toda la configuración del sistema</span>
+│
+├── Infrastructure/          <span class="cm">← Servicios de soporte</span>
+│   ├── <span class="ty">ITest.cs</span>             <span class="cm">← Interfaz que deben implementar todos los tests</span>
+│   ├── <span class="ty">TestResult.cs</span>        <span class="cm">← Modelo de datos de un resultado</span>
+│   ├── <span class="ty">TestRunner.cs</span>        <span class="cm">← Orquestador: Desktop → Tablet → Mobile</span>
+│   ├── <span class="ty">DatabaseService.cs</span>   <span class="cm">← Lectura/escritura en SQLite</span>
+│   ├── <span class="ty">ScreenshotService.cs</span> <span class="cm">← Captura y gestión de imágenes PNG</span>
+│   ├── <span class="ty">HtmlReportService.cs</span> <span class="cm">← Generación del reporte HTML final</span>
+│   ├── <span class="ty">ErrorClassifier.cs</span>   <span class="cm">← Clasifica errores en [HERRAMIENTA]/[ASERCION]/[PROGRAMACION]</span>
+│   ├── <span class="ty">MobileDriverFactory.cs</span><span class="cm">← Crea ChromeDriver con emulación de viewport</span>
+│   └── <span class="ty">MobileConfigurationProxy.cs</span> <span class="cm">← Redirige config por sección (Tablet/Mobile)</span>
+│
+├── Pages/                   <span class="cm">← Page Objects (POM): una clase por pantalla</span>
+│   ├── <span class="green">LoginPage.cs</span>
+│   ├── <span class="green">PerfilesPage.cs</span>
+│   ├── <span class="green">UsuariosPage.cs</span>
+│   ├── <span class="green">ParametrosPage.cs</span>
+│   └── <span class="green">ContactosPage.cs</span>
+│
+└── Tests/                   <span class="cm">← Módulos de prueba: uno por sección del sistema</span>
+    ├── <span class="str">LoginTest.cs</span>
+    ├── <span class="str">PerfilesTest.cs</span>
+    ├── <span class="str">UsuariosTest.cs</span>
+    ├── <span class="str">ParametrosTest.cs</span>
+    └── <span class="str">ContactosTest.cs</span>
+</pre>
+      </div>
+
+      <h3>Patrón Page Object Model (POM)</h3>
+      <p>
+        Cada pantalla del sistema tiene su propia clase en <code>Pages/</code> que encapsula
+        los selectores y las acciones. Los tests (<code>Tests/</code>) usan esas clases
+        sin conocer los detalles del HTML. Esto hace que un cambio en la UI solo requiera
+        modificar el Page Object, no los tests.
+      </p>
+    </section>
+
+    <!-- ══════════ APPSETTINGS ══════════ -->
+    <section class="section" id="appsettings">
+      <div class="sec-header">
+        <div class="sec-icon purple">⚙️</div>
+        <h2 class="sec-title">Configuración — appsettings.json</h2>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-lang">JSON</span>
+          <span class="code-file">appsettings.json</span>
+        </div>
+        <pre>{
+  <span class="prop">"TestSettings"</span>: {
+    <span class="prop">"BaseUrl"</span>:             <span class="str">"http://localhost:8080/baqueano"</span>,
+    <span class="prop">"Headless"</span>:            <span class="kw">false</span>,          <span class="cm">// true = sin ventana visible</span>
+    <span class="prop">"ImplicitWaitSeconds"</span>: <span class="num">10</span>,             <span class="cm">// timeout máximo por operación</span>
+    <span class="prop">"ScreenshotFolder"</span>:   <span class="str">"Screenshots"</span>,  <span class="cm">// relativo al ejecutable</span>
+    <span class="prop">"TotalPerfilesTests"</span>: <span class="num">40</span>,
+    <span class="prop">"TotalUsuariosTests"</span>: <span class="num">12</span>,
+    <span class="prop">"TotalParametrosTests"</span>:<span class="num">25</span>,
+    <span class="prop">"ContactosStateTests"</span>:<span class="num">8</span>,
+    <span class="prop">"ContactosDeleteCount"</span>:<span class="num">5</span>
+  },
+  <span class="prop">"TabletSettings"</span>: {    <span class="cm">// viewport 768px (tablet)</span>
+    <span class="prop">"Enabled"</span>:  <span class="kw">true</span>,
+    <span class="prop">"DeviceName"</span>: <span class="str">""</span>,      <span class="cm">// "" = usa Width/Height automáticamente</span>
+    <span class="prop">"Width"</span>:   <span class="num">768</span>,
+    <span class="prop">"Height"</span>:  <span class="num">1024</span>,
+    <span class="prop">"TotalPerfilesTests"</span>: <span class="num">40</span>   <span class="cm">// conteos independientes por viewport</span>
+    <span class="cm">// ... (mismas claves que TestSettings)</span>
+  },
+  <span class="prop">"MobileSettings"</span>: {    <span class="cm">// viewport 390px (celular)</span>
+    <span class="prop">"Enabled"</span>:  <span class="kw">true</span>,
+    <span class="prop">"DeviceName"</span>: <span class="str">""</span>,
+    <span class="prop">"Width"</span>:   <span class="num">390</span>,
+    <span class="prop">"Height"</span>:  <span class="num">844</span>
+    <span class="cm">// ...</span>
+  },
+  <span class="prop">"Credentials"</span>: {
+    <span class="prop">"Username"</span>: <span class="str">"admin"</span>,
+    <span class="prop">"Password"</span>: <span class="str">"admin123"</span>
+  },
+  <span class="prop">"ConnectionStrings"</span>: {
+    <span class="prop">"SQLite"</span>: <span class="str">"Data Source=Data\\baqueano_tests.db"</span>
+  }
+}</pre>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Clave</th><th>Tipo</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td><code>BaseUrl</code></td><td>string</td><td>URL raíz del sistema bajo prueba</td></tr>
+            <tr><td><code>Headless</code></td><td>bool</td><td><code>true</code> = Chrome sin ventana visible (CI/CD). <code>false</code> = con ventana (desarrollo)</td></tr>
+            <tr><td><code>ImplicitWaitSeconds</code></td><td>int</td><td>Segundos de espera máxima por elemento o acción</td></tr>
+            <tr><td><code>TotalPerfilesTests</code></td><td>int</td><td>Cantidad total de tests para el módulo Perfiles (se distribuye 40% ALTA / 40% MOD / 20% DEL)</td></tr>
+            <tr><td><code>TabletSettings:Enabled</code></td><td>bool</td><td>Activar/desactivar la fase Tablet</td></tr>
+            <tr><td><code>TabletSettings:DeviceName</code></td><td>string</td><td>Nombre de dispositivo Chrome DevTools (ej: <code>"iPad Mini"</code>). Vacío = usa Width/Height</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">💡</span>
+        <div>Para <strong>deshabilitar una fase</strong> sin borrar su configuración, basta con poner
+        <code>"Enabled": false</code> en <code>TabletSettings</code> o <code>MobileSettings</code>.</div>
+      </div>
+    </section>
+
+    <!-- ══════════ CÓMO EJECUTAR ══════════ -->
+    <section class="section" id="run">
+      <div class="sec-header">
+        <div class="sec-icon green">▶️</div>
+        <h2 class="sec-title">Cómo ejecutar</h2>
+      </div>
+
+      <ul class="steps">
+        <li>
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Levantar el backend Baqueano</strong>
+            Asegurarse de que el servidor Java EE esté corriendo en <code>http://localhost:8080/baqueano</code> y sea accesible desde el navegador.
+          </div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Abrir terminal en la carpeta del proyecto</strong>
+            <code>cd C:\Users\james\source\repos\baqueanoAutoTest</code>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Compilar (opcional, para verificar)</strong>
+            <code>dotnet build</code>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>Ejecutar las pruebas</strong>
+            <code>dotnet run</code><br>
+            El programa abre Chrome automáticamente y comienza a ejecutar todas las fases.
+          </div>
+        </li>
+        <li>
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <strong>Ver resultados</strong>
+            Al finalizar, se genera el archivo <code>TestReport_YYYYMMDD_HHmmss.html</code> en la carpeta del ejecutable (<code>bin\Debug\net8.0\</code>). Abrirlo en cualquier navegador.
+          </div>
+        </li>
+      </ul>
+
+      <div class="callout warn">
+        <span class="callout-icon">⚠️</span>
+        <div><strong>Al iniciar</strong>, el programa borra automáticamente todos los resultados anteriores de la base de datos,
+        todas las capturas de pantalla y el reporte HTML previo. Cada ejecución parte desde cero.</div>
+      </div>
+
+      <h3>Ejecutar en modo headless (sin ventana)</h3>
+      <p>Útil para servidores CI/CD donde no hay pantalla disponible:</p>
+      <div class="code-wrap">
+        <div class="code-header"><span class="code-lang">JSON</span><span class="code-file">appsettings.json</span></div>
+        <pre><span class="prop">"Headless"</span>: <span class="kw">true</span></pre>
+      </div>
+    </section>
+
+    <!-- ══════════ FLUJO ══════════ -->
+    <section class="section" id="flow">
+      <div class="sec-header">
+        <div class="sec-icon teal">🔄</div>
+        <h2 class="sec-title">Flujo completo de ejecución</h2>
+      </div>
+
+      <div class="flow">
+        <div class="flow-step blue"><span class="fs-icon">🧹</span>Limpiar DB<br>+ Screenshots</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><span class="fs-icon">🖥️</span>Fase<br>Desktop</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step teal"><span class="fs-icon">📟</span>Fase<br>Tablet</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step purple"><span class="fs-icon">📱</span>Fase<br>Celular</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step green"><span class="fs-icon">📊</span>Reporte<br>HTML</div>
+      </div>
+
+      <h3>Secuencia dentro de cada fase</h3>
+      <div class="flow" style="flex-wrap:wrap">
+        <div class="flow-step blue" style="font-size:12px"><span class="fs-icon">🔐</span>LoginTest</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="font-size:12px"><span class="fs-icon">👤</span>PerfilesTest</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step teal" style="font-size:12px"><span class="fs-icon">👥</span>UsuariosTest</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step purple" style="font-size:12px"><span class="fs-icon">🔧</span>ParametrosTest</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step orange" style="font-size:12px"><span class="fs-icon">✉️</span>ContactosTest</div>
+      </div>
+
+      <p style="margin-top:16px">
+        Cada módulo de test implementa la interfaz <code>ITest</code> y recibe el driver de Selenium.
+        Los tests se registran en <code>Program.cs</code> en el orden de ejecución deseado.
+      </p>
+    </section>
+
+    <!-- ══════════ FASES RESPONSIVE ══════════ -->
+    <section class="section" id="phases">
+      <div class="sec-header">
+        <div class="sec-icon purple">📱</div>
+        <h2 class="sec-title">Fases de testing responsive</h2>
+      </div>
+
+      <p>La misma suite de tests se ejecuta tres veces, cada vez con un viewport distinto para verificar que la aplicación funcione correctamente en todos los tipos de dispositivo.</p>
+
+      <div class="viewports">
+        <div class="vp">
+          <div class="vp-frame desktop" data-label="1280px+">🖥️</div>
+          <div class="vp-label">PC / Desktop</div>
+          <div class="vp-size">Ventana maximizada</div>
+          <div class="vp-size">Prefijo: <code>(sin prefijo)</code></div>
+        </div>
+        <div class="vp">
+          <div class="vp-frame tablet" data-label="768px">📟</div>
+          <div class="vp-label">Tablet</div>
+          <div class="vp-size">768 × 1024 px</div>
+          <div class="vp-size">Prefijo: <code>TAB-</code></div>
+        </div>
+        <div class="vp">
+          <div class="vp-frame mobile" data-label="390px">📱</div>
+          <div class="vp-label">Celular</div>
+          <div class="vp-size">390 × 844 px</div>
+          <div class="vp-size">Prefijo: <code>MOB-</code></div>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Fase</th><th>Driver</th><th>Viewport</th><th>User-Agent</th><th>Prefijo test</th><th>Badge reporte</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>🖥️ Desktop</td>
+              <td>ChromeDriver estándar (<code>--start-maximized</code>)</td>
+              <td>Pantalla completa</td>
+              <td>Chrome desktop</td>
+              <td><span class="badge bdg-gray">sin prefijo</span></td>
+              <td><span class="badge bdg-gray">🖥️ Desktop</span></td>
+            </tr>
+            <tr>
+              <td>📟 Tablet</td>
+              <td>ChromeDriver + <code>--window-size=768,1024</code></td>
+              <td>768 px</td>
+              <td>Android Tablet</td>
+              <td><span class="badge bdg-teal">TAB-</span></td>
+              <td><span class="badge bdg-teal">📟 Tablet</span></td>
+            </tr>
+            <tr>
+              <td>📱 Celular</td>
+              <td>ChromeDriver + <code>--window-size=390,844</code></td>
+              <td>390 px</td>
+              <td>Android Pixel 7</td>
+              <td><span class="badge bdg-purple">MOB-</span></td>
+              <td><span class="badge bdg-purple">📱 Celular</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div>Cuando una fase encuentra que un elemento de la UI no es accesible
+        (por ejemplo, el menú lateral colapsado en mobile), el test registra <strong>FAIL</strong> en esa
+        fase específica sin afectar las demás. Eso es información válida sobre problemas de responsive.</div>
+      </div>
+    </section>
+
+    <!-- ══════════ LOGIN ══════════ -->
+    <section class="section" id="login">
+      <div class="sec-header">
+        <div class="sec-icon">🔐</div>
+        <h2 class="sec-title">Módulo: Login</h2>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Descripción</th><th>Resultado esperado</th></tr></thead>
+          <tbody>
+            <tr><td><code>TC-LOGIN-01</code></td><td>Login con credenciales válidas (admin/admin123)</td><td>✅ Acceso al sistema — formulario desaparece</td></tr>
+            <tr><td><code>TC-LOGIN-02</code></td><td>Login con contraseña incorrecta</td><td>✅ Login rechazado — formulario permanece</td></tr>
+            <tr><td><code>TC-LOGIN-03</code></td><td>Login con usuario vacío</td><td>✅ Login rechazado — validación en frontend</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Al finalizar los 3 tests, el módulo <strong>vuelve a autenticarse como admin</strong> para que los módulos siguientes puedan operar con sesión activa.</p>
+    </section>
+
+    <!-- ══════════ PERFILES ══════════ -->
+    <section class="section" id="perfiles">
+      <div class="sec-header">
+        <div class="sec-icon navy">👤</div>
+        <h2 class="sec-title">Módulo: Perfiles</h2>
+      </div>
+
+      <p>Cantidad configurable via <code>TotalPerfilesTests</code> (default: 40). La distribución se calcula automáticamente:</p>
+
+      <div class="cards">
+        <div class="card accent"><div class="card-icon">🧭</div><div class="card-title">NAV (2 fijos)</div><div class="card-body">TC-PER-NAV-01: navega vía sidebar<br>TC-PER-NAV-02: navega vía URL directa</div></div>
+        <div class="card accent-green"><div class="card-icon">➕</div><div class="card-title">ALTA — 40%</div><div class="card-body">Crea perfiles con nombre, descripción y estado Activo/Inactivo</div></div>
+        <div class="card accent-orange"><div class="card-icon">✏️</div><div class="card-title">MODIFICAR — 40%</div><div class="card-body">Edita los perfiles creados cambiando sus datos</div></div>
+        <div class="card accent-purple"><div class="card-icon">🗑️</div><div class="card-title">ELIMINAR — 20%</div><div class="card-body">Borra los perfiles creados y verifica que desaparezcan</div></div>
+      </div>
+    </section>
+
+    <!-- ══════════ USUARIOS ══════════ -->
+    <section class="section" id="usuarios">
+      <div class="sec-header">
+        <div class="sec-icon green">👥</div>
+        <h2 class="sec-title">Módulo: Usuarios</h2>
+      </div>
+
+      <p>Cantidad configurable via <code>TotalUsuariosTests</code> (default: 12). Incluye prueba de login por ventana nueva.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Bloque</th><th>Tests</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td>NAV</td><td>2 fijos</td><td>Sidebar y URL directa</td></tr>
+            <tr><td>ALTA</td><td>40% del total</td><td>Crea usuarios con nombre, apellido, email, perfil (ADMIN/CONSULTA/GESTOR) y estado activo</td></tr>
+            <tr><td>LOGIN</td><td>30% de los creados</td><td>Abre una <strong>ventana nueva</strong>, prueba el login de cada usuario creado y cierra la ventana</td></tr>
+            <tr><td>MODIFICAR</td><td>40% del total</td><td>Edita datos del usuario (excepto el usuario <em>admin</em>)</td></tr>
+            <tr><td>ELIMINAR</td><td>20% del total</td><td>Elimina usuarios (nunca elimina <em>admin</em>)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout danger">
+        <span class="callout-icon">🛡️</span>
+        <div>El usuario <strong>admin</strong> está protegido por doble capa: la página no permite editarlo ni eliminarlo, y los tests lo filtran antes de intentarlo.</div>
+      </div>
+    </section>
+
+    <!-- ══════════ PARÁMETROS ══════════ -->
+    <section class="section" id="parametros">
+      <div class="sec-header">
+        <div class="sec-icon orange">🔧</div>
+        <h2 class="sec-title">Módulo: Parámetros</h2>
+      </div>
+
+      <p>Cantidad configurable via <code>TotalParametrosTests</code> (default: 25). Misma distribución que Perfiles (40/40/20).</p>
+      <p>Cada parámetro se crea con <strong>clave</strong>, <strong>valor</strong>, <strong>descripción</strong> y <strong>estado</strong> (Activo/Inactivo). Los tests verifican que el registro aparezca en la tabla tras cada operación.</p>
+    </section>
+
+    <!-- ══════════ CONTACTOS ══════════ -->
+    <section class="section" id="contactos">
+      <div class="sec-header">
+        <div class="sec-icon red">✉️</div>
+        <h2 class="sec-title">Módulo: Contactos</h2>
+      </div>
+
+      <p>Prueba la gestión de mensajes recibidos. Opera sobre los registros existentes en la tabla.</p>
+
+      <h3>Bloque 1 — Cambio de estado</h3>
+      <p>Para cada contacto (hasta <code>ContactosStateTests</code> = 8 por defecto), abre el modal de detalle y cambia el estado rotando en ciclo:</p>
+
+      <div class="flow">
+        <div class="flow-step blue">NUEVO</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step teal">LEIDO</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step orange">RESPONDIDO</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step purple">ARCHIVADO</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step blue">NUEVO…</div>
+      </div>
+
+      <h3>Bloque 2 — Eliminación</h3>
+      <p>Elimina hasta <code>ContactosDeleteCount</code> = 5 registros (siempre el primero disponible) y verifica que el conteo de la tabla disminuya correctamente.</p>
+
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div>Si no hay contactos en la tabla, ambos bloques se omiten y se registra una advertencia. Los tests nunca fallan por falta de datos — se adaptan.</div>
+      </div>
+    </section>
+
+    <!-- ══════════ BASE DE DATOS ══════════ -->
+    <section class="section" id="database">
+      <div class="sec-header">
+        <div class="sec-icon teal">🗄</div>
+        <h2 class="sec-title">Base de datos SQLite</h2>
+      </div>
+
+      <p>Los resultados se guardan en <code>Data\baqueano_tests.db</code> (relativo al ejecutable). Se crea automáticamente si no existe.</p>
+
+      <h3>Tabla: TestResults</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Columna</th><th>Tipo</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td><code>Id</code></td><td>INTEGER PK</td><td>Autoincremental</td></tr>
+            <tr><td><code>TestName</code></td><td>TEXT</td><td>ID del test (ej: <code>MOB-TC-LOGIN-01</code>)</td></tr>
+            <tr><td><code>Category</code></td><td>TEXT</td><td>Categoría (ej: <code>Login</code>, <code>Usuarios-Alta</code>)</td></tr>
+            <tr><td><code>Passed</code></td><td>INTEGER</td><td>1 = PASS, 0 = FAIL</td></tr>
+            <tr><td><code>Message</code></td><td>TEXT</td><td>Mensaje del resultado o descripción del error</td></tr>
+            <tr><td><code>ScreenshotPath</code></td><td>TEXT</td><td>Ruta absoluta a la captura de pantalla</td></tr>
+            <tr><td><code>ExecutedAt</code></td><td>TEXT</td><td>Timestamp de ejecución</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════ CAPTURAS ══════════ -->
+    <section class="section" id="screenshots">
+      <div class="sec-header">
+        <div class="sec-icon navy">📸</div>
+        <h2 class="sec-title">Capturas de pantalla</h2>
+      </div>
+
+      <p>Cada test guarda una captura al finalizar (sea PASS o FAIL). Se almacenan en <code>Screenshots\</code> relativo al ejecutable.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Aspecto</th><th>Detalle</th></tr></thead>
+          <tbody>
+            <tr><td>Formato</td><td>PNG</td></tr>
+            <tr><td>Nombre de archivo</td><td><code>{TestName}_{yyyyMMdd_HHmmss_fff}.png</code></td></tr>
+            <tr><td>Ejemplo</td><td><code>TC-LOGIN-01_20260521_143022_123.png</code></td></tr>
+            <tr><td>Limpieza</td><td>Al iniciar cada ejecución se borran todas las capturas anteriores</td></tr>
+            <tr><td>Momento</td><td>Se toma <em>siempre</em> en el bloque <code>finally</code>, incluso si el test lanza excepción</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════ REPORTE ══════════ -->
+    <section class="section" id="report">
+      <div class="sec-header">
+        <div class="sec-icon">📊</div>
+        <h2 class="sec-title">Reporte HTML</h2>
+      </div>
+
+      <p>Al finalizar todas las fases se genera un único archivo <code>TestReport_YYYYMMDD_HHmmss.html</code>. Es un archivo autónomo (sin dependencias externas) que se puede abrir en cualquier navegador.</p>
+
+      <div class="cards">
+        <div class="card accent">
+          <div class="card-icon">📟</div>
+          <div class="card-title">Pestañas por dispositivo</div>
+          <div class="card-body">Filtrar por PC Desktop, Tablet o Celular con un clic. Cada pestaña muestra su propio conteo PASS/FAIL y porcentaje.</div>
+        </div>
+        <div class="card accent-green">
+          <div class="card-icon">🔍</div>
+          <div class="card-title">Zoom en imágenes</div>
+          <div class="card-body">Al pasar el mouse sobre una captura se amplía (scale 1.6×). Clic abre la imagen en pantalla completa (lightbox).</div>
+        </div>
+        <div class="card accent-orange">
+          <div class="card-icon">📄</div>
+          <div class="card-title">Paginación 3×3</div>
+          <div class="card-body">La grilla muestra 9 tests por página con navegación numérica.</div>
+        </div>
+        <div class="card accent-purple">
+          <div class="card-icon">🏷️</div>
+          <div class="card-title">Badges identificadores</div>
+          <div class="card-body">Cada tarjeta muestra: categoría, PASS/FAIL, y el dispositivo (🖥️ Desktop / 📟 Tablet / 📱 Celular).</div>
+        </div>
+      </div>
+
+      <h3>Interpretación del color de pestañas</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Color del porcentaje</th><th>Significado</th></tr></thead>
+          <tbody>
+            <tr><td><strong style="color:#16a34a">Verde</strong></td><td>100% de tests en PASS</td></tr>
+            <tr><td><strong style="color:#f97316">Naranja</strong></td><td>Entre 50% y 99% en PASS — hay fallas menores</td></tr>
+            <tr><td><strong style="color:#dc2626">Rojo</strong></td><td>Menos del 50% en PASS — hay fallas críticas</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════ ERRORES ══════════ -->
+    <section class="section" id="errors">
+      <div class="sec-header">
+        <div class="sec-icon red">🚨</div>
+        <h2 class="sec-title">Clasificación de errores</h2>
+      </div>
+
+      <p>Cuando un test falla, el mensaje en el reporte incluye un prefijo que indica la <em>causa raíz</em>:</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Prefijo</th><th>Causa</th><th>Ejemplos</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge bdg-orange">[HERRAMIENTA]</span></td>
+              <td>Problema de Selenium al interactuar con la UI</td>
+              <td>Elemento no encontrado, elemento bloqueado, timeout de espera, ventana cerrada inesperadamente</td>
+            </tr>
+            <tr>
+              <td><span class="badge bdg-blue">[ASERCION]</span></td>
+              <td>El test completó pero el resultado no es el esperado</td>
+              <td>La página no cargó, el registro no aparece en la tabla, el conteo no bajó tras eliminar</td>
+            </tr>
+            <tr>
+              <td><span class="badge bdg-purple">[PROGRAMACION]</span></td>
+              <td>Error en la lógica interna del test</td>
+              <td>NullReferenceException, InvalidOperationException, lógica de código incorrecta</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">💡</span>
+        <div><strong>[HERRAMIENTA]</strong> suele indicar que la UI cambió (selector desactualizado) o que hay lentitud de red.
+        <strong>[ASERCION]</strong> indica que la funcionalidad del sistema falló.
+        <strong>[PROGRAMACION]</strong> indica un bug en el propio código de testing.</div>
+      </div>
+    </section>
+
+    <!-- ══════════ EXTENDER ══════════ -->
+    <section class="section" id="extend">
+      <div class="sec-header">
+        <div class="sec-icon green">➕</div>
+        <h2 class="sec-title">Agregar un nuevo módulo de tests</h2>
+      </div>
+
+      <ul class="steps">
+        <li>
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Crear el Page Object en <code>Pages/</code></strong>
+            Implementa los selectores y acciones de la nueva pantalla.
+          </div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Crear la clase de test en <code>Tests/</code></strong>
+            Implementar la interfaz <code>ITest</code> con el método <code>RunAsync(IWebDriver driver)</code>.
+          </div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Registrar en <code>Program.cs</code></strong>
+<div class="code-wrap" style="margin-top:8px">
+  <div class="code-header"><span class="code-lang">C#</span><span class="code-file">Program.cs</span></div>
+  <pre><span class="cm">// Agregar al final de la lista de tests:</span>
+services.AddTransient&lt;<span class="ty">ITest</span>, <span class="ty">MiNuevoTest</span>&gt;();</pre>
+</div>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>Agregar conteos en <code>appsettings.json</code></strong>
+            Agregar <code>"TotalMiModuloTests": 10</code> en las tres secciones (TestSettings, TabletSettings, MobileSettings).
+          </div>
+        </li>
+      </ul>
+
+      <div class="callout info">
+        <span class="callout-icon">ℹ️</span>
+        <div>El nuevo módulo se ejecutará automáticamente en las tres fases (Desktop, Tablet, Celular) sin ningún cambio adicional en el <code>TestRunner</code>.</div>
+      </div>
+    </section>
+
+    <!-- ══════════ TROUBLESHOOT ══════════ -->
+    <section class="section" id="troubleshoot">
+      <div class="sec-header">
+        <div class="sec-icon orange">🛠</div>
+        <h2 class="sec-title">Solución de problemas frecuentes</h2>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Problema</th><th>Causa probable</th><th>Solución</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>ChromeDriver no inicia</td>
+              <td>Versión de Chrome ≠ versión del ChromeDriver</td>
+              <td>Ejecutar <code>dotnet restore</code> para actualizar el paquete ChromeDriver</td>
+            </tr>
+            <tr>
+              <td><code>WebDriverTimeoutException</code> en login</td>
+              <td>El backend tarda en cargar o el SPA demora en redirigir</td>
+              <td>Aumentar <code>ImplicitWaitSeconds</code> a 15 o 20 en <code>appsettings.json</code></td>
+            </tr>
+            <tr>
+              <td>Tests de mobile/tablet fallan todos</td>
+              <td>El DeviceName configurado no existe en esta versión de Chrome</td>
+              <td>Dejar <code>DeviceName: ""</code> para que use <code>Width</code>/<code>Height</code> automáticamente</td>
+            </tr>
+            <tr>
+              <td>Toasts bloquean los clicks</td>
+              <td>Notificaciones Sonner flotando sobre los botones</td>
+              <td>Ya está manejado automáticamente por <code>WaitForToastsToDisappear()</code>. Si persiste, aumentar el timeout de toast (actualmente 6s)</td>
+            </tr>
+            <tr>
+              <td>Modal de Contactos no se detecta</td>
+              <td>React no genera <code>role="dialog"</code> estándar</td>
+              <td>El sistema detecta el modal por los botones de estado (NUEVO/LEIDO/etc.), no por el contenedor. Si los botones cambian de texto, actualizar <code>StateButtonsXPath</code> en <code>ContactosPage.cs</code></td>
+            </tr>
+            <tr>
+              <td>Reporte HTML sin imágenes</td>
+              <td>Las capturas y el HTML están en distintas carpetas</td>
+              <td>Abrir el reporte desde la carpeta <code>bin\Debug\net8.0\</code>, no moverlo a otra ubicación</td>
+            </tr>
+            <tr>
+              <td>Error al compilar: NETSDK1022</td>
+              <td>Archivos duplicados en el <code>.csproj</code></td>
+              <td>Eliminar la línea <code>&lt;Content Include="appsettings.json"&gt;</code> del <code>.csproj</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div>⚡ BaqueanoAutoTest — Documentación Técnica</div>
+      <div style="margin-top:6px">Generado para el equipo de QA · .NET 8 · Selenium WebDriver 4.27 · SQLite</div>
+    </footer>
+
+  </div><!-- /content -->
+</div><!-- /layout -->
+
+<script>
+  /* ── Scrollspy: resaltar link activo en sidebar ── */
+  const links = document.querySelectorAll('.sb-link');
+  const sections = [];
+
+  links.forEach(link => {
+    const id = link.getAttribute('href')?.replace('#','');
+    if (id) {
+      const el = document.getElementById(id);
+      if (el) sections.push({ el, link });
+    }
+  });
+
+  function updateActive() {
+    const scrollY = window.scrollY + 100;
+    let current = sections[0];
+    for (const s of sections) {
+      if (s.el.offsetTop <= scrollY) current = s;
+    }
+    links.forEach(l => l.classList.remove('active'));
+    if (current) current.link.classList.add('active');
+  }
+
+  window.addEventListener('scroll', updateActive, { passive: true });
+  updateActive();
+</script>
+</body>
+</html>

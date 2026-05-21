@@ -1,0 +1,347 @@
+Crea un proyecto de tipo Worker Service en C# (.NET 8) compatible con Visual Studio 2022,
+llamado "BaqueanoAutoTest", orientado a pruebas de automatización autónomas sobre un
+backend Java EE. El proyecto debe estar completamente estructurado y listo para ejecutarse.
+
+═══════════════════════════════════════════════════════
+## ESTRUCTURA DE CARPETAS
+═══════════════════════════════════════════════════════
+
+BaqueanoAutoTest/
+├── BaqueanoAutoTest.csproj
+├── Program.cs
+├── Worker.cs
+├── appsettings.json
+├── Pages/
+│   ├── LoginPage.cs
+│   └── PerfilesPage.cs
+├── Tests/
+│   ├── LoginTest.cs
+│   └── PerfilesTest.cs
+├── Infrastructure/
+│   ├── TestRunner.cs
+│   ├── TestResult.cs
+│   ├── DatabaseService.cs
+│   └── ScreenshotService.cs
+└── Data/
+    └── (carpeta vacía — aquí se creará baqueano_tests.db en runtime)
+
+═══════════════════════════════════════════════════════
+## DEPENDENCIAS NUGET
+═══════════════════════════════════════════════════════
+
+- Selenium.WebDriver (4.x)
+- Selenium.WebDriver.ChromeDriver (última versión estable)
+- Selenium.Support
+- Microsoft.Extensions.Hosting
+- Microsoft.Extensions.Logging
+- Microsoft.Extensions.Configuration.Json
+- Microsoft.Data.Sqlite (para SQLite)
+
+═══════════════════════════════════════════════════════
+## appsettings.json
+═══════════════════════════════════════════════════════
+
+{
+  "TestSettings": {
+    "BaseUrl": "http://localhost/baqueano",
+    "Browser": "Chrome",
+    "Headless": false,
+    "ImplicitWaitSeconds": 10,
+    "ScreenshotFolder": "C:\\BaqueanoAutoTest\\Screenshots",
+    "TotalPerfilesTests": 40
+  },
+  "Credentials": {
+    "Username": "admin",
+    "Password": "admin123"
+  },
+  "ConnectionStrings": {
+    "SQLite": "Data Source=Data\\baqueano_tests.db"
+  }
+}
+
+═══════════════════════════════════════════════════════
+## Infrastructure/TestResult.cs
+═══════════════════════════════════════════════════════
+
+Clase con las propiedades:
+- int    Id               (clave primaria SQLite, autoincrement)
+- string TestName
+- string Category        ("Login" | "Perfiles-Navegacion" | "Perfiles-Alta" |
+                          "Perfiles-Modificar" | "Perfiles-Eliminar")
+- bool   Passed
+- string Message
+- string? ScreenshotPath  (ruta absoluta al archivo .png, null si no aplica)
+- DateTime ExecutedAt
+
+═══════════════════════════════════════════════════════
+## Infrastructure/DatabaseService.cs
+═══════════════════════════════════════════════════════
+
+Servicio singleton que:
+1. Al iniciar (método InitializeAsync) crea la base de datos SQLite en la ruta
+   indicada por la ConnectionString y ejecuta el siguiente DDL si la tabla
+   no existe:
+
+   CREATE TABLE IF NOT EXISTS TestResults (
+     Id             INTEGER PRIMARY KEY AUTOINCREMENT,
+     TestName       TEXT    NOT NULL,
+     Category       TEXT    NOT NULL,
+     Passed         INTEGER NOT NULL,   -- 1=true, 0=false
+     Message        TEXT,
+     ScreenshotPath TEXT,
+     ExecutedAt     TEXT    NOT NULL
+   );
+
+2. Expone el método:
+   Task SaveResultAsync(TestResult result)
+   → inserta la fila correspondiente.
+
+3. Expone el método:
+   Task<List<TestResult>> GetAllResultsAsync()
+   → retorna todos los resultados ordenados por ExecutedAt DESC.
+
+═══════════════════════════════════════════════════════
+## Infrastructure/ScreenshotService.cs
+═══════════════════════════════════════════════════════
+
+Servicio que:
+- Recibe IConfiguration por inyección (lee "TestSettings:ScreenshotFolder").
+- Método TakeScreenshot(IWebDriver driver, string testName) → string:
+    · Crea la carpeta si no existe.
+    · Genera el nombre de archivo como:
+        {testName}_{yyyyMMdd_HHmmss_fff}.png
+    · Usa ITakesScreenshot para capturar y guardar el archivo.
+    · Retorna la ruta absoluta al archivo guardado.
+
+═══════════════════════════════════════════════════════
+## Infrastructure/TestRunner.cs
+═══════════════════════════════════════════════════════
+
+- Recibe por inyección: IConfiguration, ILogger, DatabaseService,
+  ScreenshotService, IWebDriver y la colección IEnumerable<ITest>.
+- Interfaz ITest:
+    Task<List<TestResult>> RunAsync(IWebDriver driver);
+- Método RunAllAsync():
+    · Llama await db.InitializeAsync() al inicio.
+    · Por cada ITest, llama RunAsync(driver), loguea y persiste cada
+      TestResult via DatabaseService.SaveResultAsync.
+    · Si un test lanza excepción no capturada internamente, toma screenshot,
+      registra el resultado como FAIL y continúa con el siguiente test.
+    · Al finalizar imprime en el logger un resumen:
+        Total: N | PASS: X | FAIL: Y
+
+═══════════════════════════════════════════════════════
+## Pages/LoginPage.cs  — Page Object Model
+═══════════════════════════════════════════════════════
+
+Selectores:
+- Campo usuario:    By.Id("username")
+- Campo contraseña: By.Id("password")
+- Botón submit:     By.CssSelector("button[type='submit']")
+
+Métodos:
+- Navigate()                  → navega a BaseUrl
+- EnterUsername(string u)
+- EnterPassword(string p)
+- ClickLogin()
+- bool IsLoginSuccessful()    → WebDriverWait hasta que desaparezca #username
+                                 o aparezca un elemento del dashboard
+
+═══════════════════════════════════════════════════════
+## Pages/PerfilesPage.cs  — Page Object Model
+═══════════════════════════════════════════════════════
+
+Selectores (basados en el HTML provisto):
+
+  Navegación:
+  - Link sidebar:    By.CssSelector("a[href='/baqueano/perfiles'].flex")
+  - Link dashboard:  By.CssSelector("a.bg-info[href='/baqueano/perfiles']")
+
+  Página Perfiles:
+  - Botón "+ Nuevo": By.CssSelector("button") con texto "Nuevo"   
+                     o By.XPath("//button[contains(.,'Nuevo')]")
+  
+  Formulario ALTA / Modificar (modal o página):
+  - Campo Nombre:      By.Id("nombre")  — si no existe usar
+                       By.XPath("//input[@name='nombre' or @placeholder='Nombre']")
+  - Campo Descripción: By.Id("descripcion") o
+                       By.XPath("//input[@name='descripcion' or 
+                                 @placeholder='Descripcion']")
+  - Campo Estado:      By.Id("estado") o 
+                       By.XPath("//select[@name='estado']")
+  - Botón Guardar:     By.XPath("//button[@type='submit' or contains(.,'Guardar')
+                                 or contains(.,'Aceptar')]")
+  - Botón Cancelar:    By.XPath("//button[contains(.,'Cancelar')]")
+
+  Tabla de resultados:
+  - Filas de datos:       By.CssSelector("table tbody tr")
+  - Botón editar (fila):  By.CssSelector("button svg.lucide-pencil")
+                          o By.XPath(".//button[.//*[contains(@class,'lucide-pencil')]]")
+  - Botón eliminar (fila):By.CssSelector("button svg.lucide-trash")
+                          o By.XPath(".//button[.//*[contains(@class,'lucide-trash')]]")
+  - Confirmación eliminar:By.XPath("//button[contains(.,'Confirmar') or 
+                                    contains(.,'Sí') or contains(.,'Eliminar')]")
+
+Nota: si en runtime los selectores anteriores no resuelven, usar
+By.XPath con texto visible como fallback. Los métodos deben usar
+WebDriverWait con timeout configurable desde IConfiguration.
+
+Métodos públicos:
+- NavigateViaSidebar()
+- NavigateViaDashboardLink()
+- bool IsPerfilesPageLoaded()   → verifica presencia del título "Perfiles"
+- ClickNuevo()
+- FillForm(string nombre, string descripcion, string estado = "Activo")
+- ClickGuardar()
+- bool IsProfileInTable(string nombre)
+- ClickEditarByNombre(string nombre)
+- ClickEliminarByNombre(string nombre)
+- ConfirmEliminar()
+- int GetTotalPerfiles()    → lee el texto "N en total" del paginador
+
+═══════════════════════════════════════════════════════
+## Tests/LoginTest.cs
+═══════════════════════════════════════════════════════
+
+Implementa ITest. Retorna List<TestResult>.
+
+Casos de prueba:
+
+TC-LOGIN-01: Login con credenciales válidas (admin / admin123)
+  → Esperado: IsLoginSuccessful() == true
+  → Toma screenshot al finalizar (PASS o FAIL)
+
+TC-LOGIN-02: Login con contraseña incorrecta (admin / wrongpass)
+  → Esperado: IsLoginSuccessful() == false (permanece en login)
+  → Toma screenshot al finalizar
+
+TC-LOGIN-03: Login con usuario vacío
+  → Esperado: no navega fuera del formulario
+  → Toma screenshot al finalizar
+
+Después del TC-LOGIN-01 el driver queda autenticado para los tests siguientes.
+
+═══════════════════════════════════════════════════════
+## Tests/PerfilesTest.cs
+═══════════════════════════════════════════════════════
+
+Implementa ITest. Lee de IConfiguration:
+  - TotalTests = "TestSettings:TotalPerfilesTests"  (default 40 si no existe)
+  - BaseUrl, credenciales, etc.
+
+El método RunAsync genera dinámicamente la lista de tests hasta completar
+TotalTests ejecuciones totales, distribuyendo así:
+
+  BLOQUE 1 — Navegación (2 tests, siempre fijos):
+  ─────────────────────────────────────────────────
+  TC-PERF-NAV-01: Navegar a Perfiles por link del sidebar
+    → Acción:   NavigateViaSidebar()
+    → Esperado: IsPerfilesPageLoaded() == true
+    → Screenshot al finalizar
+
+  TC-PERF-NAV-02: Navegar a Perfiles por link del Dashboard ("Ir a Perfiles")
+    → Acción:   NavigateViaDashboardLink()
+    → Esperado: IsPerfilesPageLoaded() == true
+    → Screenshot al finalizar
+
+  BLOQUE 2 — ALTA (rellena hasta completar proporciones):
+  ─────────────────────────────────────────────────────────
+  Genera perfiles con nombres únicos usando un contador:
+    nombre:      "PerfilTest_{n}"          (n = 1, 2, 3, ...)
+    descripcion: "Descripcion automatica {n}"
+    estado:      Alternar entre "Activo" e "Inactivo"
+
+  Por cada ALTA:
+  TC-PERF-ALTA-{n}: Crear perfil "PerfilTest_{n}"
+    → ClickNuevo → FillForm → ClickGuardar
+    → Esperado: IsProfileInTable("PerfilTest_{n}") == true
+    → Screenshot al finalizar (PASS o FAIL)
+
+  BLOQUE 3 — MODIFICAR (sobre perfiles creados en Bloque 2):
+  ────────────────────────────────────────────────────────────
+  TC-PERF-MOD-{n}: Modificar perfil "PerfilTest_{n}"
+    → ClickEditarByNombre → FillForm con descripcion "Modificado {n}" 
+      y estado alternado → ClickGuardar
+    → Esperado: IsProfileInTable("PerfilTest_{n}") == true
+    → Screenshot al finalizar
+
+  BLOQUE 4 — ELIMINAR (sobre perfiles modificados):
+  ─────────────────────────────────────────────────
+  TC-PERF-DEL-{n}: Eliminar perfil "PerfilTest_{n}"
+    → ClickEliminarByNombre → ConfirmEliminar
+    → Esperado: IsProfileInTable("PerfilTest_{n}") == false
+    → Screenshot al finalizar
+
+  Distribución recomendada para TotalTests = 40:
+    2  tests de Navegación  (fijos)
+    14 tests de ALTA
+    14 tests de Modificar   (sobre los 14 creados)
+    10 tests de Eliminar    (sobre 10 de los 14)
+    ── total: 40
+
+  Si TotalTests cambia, recalcular proporciones manteniendo los
+  2 de navegación fijos y distribuyendo el resto en ratio 40/40/20
+  (ALTA / Modificar / Eliminar) redondeando hacia abajo.
+
+  Cada test individual captura screenshot independientemente de si
+  pasa o falla, llamando a ScreenshotService.TakeScreenshot.
+
+═══════════════════════════════════════════════════════
+## Worker.cs
+═══════════════════════════════════════════════════════
+
+- Hereda BackgroundService.
+- En ExecuteAsync: llama await testRunner.RunAllAsync() y luego
+  await StopApplication() para que el proceso termine limpiamente.
+- Registra en ILogger<Worker> inicio, fin y resultado global.
+
+═══════════════════════════════════════════════════════
+## Program.cs
+═══════════════════════════════════════════════════════
+
+Registrar en el contenedor DI:
+
+  builder.Services.AddHostedService<Worker>();
+  
+  // WebDriver (transient: nueva instancia por resolución)
+  builder.Services.AddTransient<IWebDriver>(sp => {
+      var cfg = sp.GetRequiredService<IConfiguration>();
+      var options = new ChromeOptions();
+      if (cfg["TestSettings:Headless"] == "true")
+          options.AddArgument("--headless=new");
+      return new ChromeDriver(options);
+  });
+  
+  builder.Services.AddSingleton<DatabaseService>();
+  builder.Services.AddSingleton<ScreenshotService>();
+  builder.Services.AddSingleton<TestRunner>();
+  builder.Services.AddTransient<ITest, LoginTest>();
+  builder.Services.AddTransient<ITest, PerfilesTest>();
+
+═══════════════════════════════════════════════════════
+## OBSERVACIONES GENERALES
+═══════════════════════════════════════════════════════
+
+1. Usa WebDriverWait + ExpectedConditions en todos los selectores.
+   Nunca uses Thread.Sleep salvo que sea estrictamente necesario y 
+   con un máximo de 500ms.
+
+2. Todos los selectores usan By.Id cuando el id esté disponible;
+   By.CssSelector como primera alternativa; By.XPath como fallback.
+
+3. Si al ejecutar un test el elemento no se encuentra, captura screenshot,
+   marca el test como FAIL con mensaje descriptivo y continúa. Nunca
+   abortes toda la suite por un test fallido.
+
+4. La carpeta de screenshots se crea automáticamente si no existe.
+   El nombre del archivo incluye nombre del test + timestamp con milisegundos
+   para evitar colisiones.
+
+5. La base de datos SQLite se crea en Data\baqueano_tests.db relativo
+   al directorio de ejecución. Si ya existe, se reutiliza (no se borra).
+
+6. TotalPerfilesTests es 40 por defecto pero configurable desde 
+   appsettings.json sin recompilar.
+
+7. El código debe compilar sin warnings en .NET 8 y VS 2022.
+   No agregues comentarios obvios; solo comenta decisiones no evidentes.

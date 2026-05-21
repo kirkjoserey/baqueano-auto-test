@@ -1,0 +1,23 @@
+{
+  "TestSettings": {
+    "BaseUrl": "http://localhost:8080/baqueano",
+    "Browser": "Chrome",
+    "Headless": false,
+    "ImplicitWaitSeconds": 10,
+    "ScreenshotFolder": "C:\\Users\\james\\source\\repos\\baqueanoAutoTest\\bin\\Debug\\net8.0\\Screenshots",
+    "TotalPerfilesTests": 40
+  },
+  "Credentials": {
+    "Username": "admin",
+    "Password": "admin123"
+  },
+  "ConnectionStrings": {
+    "SQLite": "Data Source=C:\\Users\\james\\source\\repos\\baqueanoAutoTest\\bin\\Debug\\net8.0\\baqueano_tests.db"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  }
+}
